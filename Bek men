@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="km">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Selfie Capture (Consensual)</title>
+  <style>
+    body{font-family:Arial, Helvetica, sans-serif; padding:20px; max-width:720px; margin:auto;}
+    video, canvas, img{max-width:100%; border:1px solid #ccc; margin-top:10px;}
+    button{padding:10px 14px; margin:5px 0;}
+    .notice{background:#fffae6; padding:10px; border:1px solid #ffd27f; margin-bottom:15px;}
+    #gallery img{margin-top:10px; display:block;}
+  </style>
+</head>
+<body>
+  <h2>ផ្ញើរូបមុខរបស់អ្នក (ច្បាស់, តែពេលចុច)</h2>
+  <div class="notice">
+    សូមច្បាស់៖ រូបនឹងត្រូវបានថត **តែពេលអ្នកចុច "ថតរូប"**។  
+    មិនមានការចាប់រូបស្វ័យប្រវត្តិ។ អ្នកអាចទាញយករូបបានដោយចុច "Download"។
+  </div>
+
+  <button id="startBtn">បើក​កាមេរ៉ា (Allow)</button>
+  <button id="captureBtn" disabled>ថតរូប</button>
+  <button id="downloadBtn" disabled>ទាញយក (Download)</button>
+
+  <video id="video" autoplay playsinline style="width:300px;"></video>
+  <canvas id="canvas" style="display:none"></canvas>
+
+  <h3>Gallery រូបថត</h3>
+  <div id="gallery"></div>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const captureBtn = document.getElementById('captureBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const gallery = document.getElementById('gallery');
+
+    let stream;
+    let lastDataUrl = '';
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        captureBtn.disabled = false;
+      } catch (err) {
+        alert('មិនអាចបើកកាមេរ៉ា។ សូមពិនិត្យឧបករណ៍ និងការអនុញ្ញាត។');
+      }
+    });
+
+    captureBtn.addEventListener('click', () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      canvas.style.display = 'block';
+      lastDataUrl = canvas.toDataURL('image/png');
+
+      const img = document.createElement('img');
+      img.src = lastDataUrl;
+      gallery.appendChild(img);
+      downloadBtn.disabled = false;
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (!lastDataUrl) return;
+      const link = document.createElement('a');
+      link.href = lastDataUrl;
+      link.download = 'selfie.png';
+      link.click();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+    });
+  </script>
+</body>
+</html>
